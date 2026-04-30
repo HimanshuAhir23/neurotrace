@@ -1,0 +1,25 @@
+"""
+ASGI config for config project — NeuroTrace
+
+Routes:
+  HTTP  → Django views
+  WS    → Django Channels consumers
+"""
+
+import os
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+from core.routing import websocket_urlpatterns
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+application = ProtocolTypeRouter({
+    # Standard HTTP requests → Django views
+    "http": get_asgi_application(),
+
+    # WebSocket requests → Channels consumers
+    "websocket": AuthMiddlewareStack(
+        URLRouter(websocket_urlpatterns)
+    ),
+})

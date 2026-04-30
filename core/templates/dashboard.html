@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroTrace Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+/* ===================== RESET & BASE ===================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:        #0052cc;
+  --blue-light:  #0065ff;
+  --blue-bg:     #e9f2ff;
+  --green:       #36b37e;
+  --green-bg:    #e3fcef;
+  --red:         #de350b;
+  --red-bg:      #ffebe6;
+  --orange:      #ff8b00;
+  --orange-bg:   #fffae6;
+  --purple:      #6554c0;
+  --purple-bg:   #eae6ff;
+  --teal:        #00b8d9;
+  --teal-bg:     #e6fcff;
+  --text-dark:   #172b4d;
+  --text-mid:    #42526e;
+  --text-light:  #6b778c;
+  --border:      #dfe1e6;
+  --bg-page:     #f4f5f7;
+  --bg-white:    #ffffff;
+  --bg-hover:    #f4f5f7;
+  --sidebar-w:   240px;
+  --topbar-h:    56px;
+  --shadow-sm:   0 1px 3px rgba(9,30,66,.12), 0 0 1px rgba(9,30,66,.1);
+  --shadow-md:   0 3px 8px rgba(9,30,66,.12), 0 0 1px rgba(9,30,66,.1);
+  --radius:      3px;
+  --radius-md:   8px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ===================== TOPBAR ===================== */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--topbar-h);
+  background: #1d2125;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 4px;
+  z-index: 200;
+  border-bottom: 1px solid #2c333a;
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.topbar-logo-icon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #0065ff, #00c7e6);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 11px;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.topbar-logo-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.topbar-nav-item {
+  color: #b8c0cc;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: color .15s, background .15s;
+  border: none;
+  background: none;
+  text-decoration: none;
+}
+
+.topbar-nav-item:hover { color: #fff; background: rgba(255,255,255,.08); }
+.topbar-nav-item.active { color: #fff; }
+
+.topbar-nav-item .caret {
+  font-size: 9px;
+  opacity: .7;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.topbar-search {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 3px;
+  padding: 5px 10px 5px 30px;
+  color: #fff;
+  font-size: 13px;
+  width: 160px;
+  outline: none;
+  position: relative;
+  transition: width .2s, background .2s;
+}
+.topbar-search:focus { width: 220px; background: rgba(255,255,255,.18); }
+.topbar-search::placeholder { color: rgba(255,255,255,.45); }
+
+.search-wrap { position: relative; }
+.search-wrap::before {
+  content: '⌕';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,.45);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.topbar-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  color: #b8c0cc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: color .15s, background .15s;
+}
+.topbar-icon-btn:hover { color: #fff; background: rgba(255,255,255,.08); }
+
+.topbar-create-btn {
+  background: var(--blue-light);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  margin-left: 4px;
+}
+.topbar-create-btn:hover { background: #0747a6; }
+
+.topbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff8b00, #ff5630);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.notif-badge {
+  position: relative;
+}
+.notif-badge::after {
+  content: attr(data-count);
+  position: absolute;
+  top: 0; right: 0;
+  background: #de350b;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  pointer-events: none;
+}
+
+/* ===================== SIDEBAR ===================== */
+.sidebar {
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  width: var(--sidebar-w);
+  height: calc(100vh - var(--topbar-h));
+  background: var(--bg-white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-project {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.sidebar-project-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #0052cc, #00c7e6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.sidebar-project-info {
+  overflow: hidden;
+}
+
+.sidebar-project-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-project-type {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 1px;
+}
+
+.sidebar-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 16px 16px 6px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  color: var(--text-mid);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background .12s, color .12s;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-item:hover { background: var(--bg-hover); color: var(--text-dark); }
+
+.sidebar-item.active {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border-left-color: var(--blue);
+  font-weight: 600;
+}
+
+.sidebar-item-icon {
+  font-size: 15px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+}
+
+/* ===================== MAIN LAYOUT ===================== */
+.main {
+  margin-left: var(--sidebar-w);
+  padding-top: var(--topbar-h);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===================== BOARD HEADER ===================== */
+.board-header {
+  padding: 20px 24px 0;
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border);
+}
+
+.board-breadcrumb {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.board-breadcrumb a { color: var(--text-light); text-decoration: none; }
+.board-breadcrumb a:hover { text-decoration: underline; }
+.board-breadcrumb span { margin: 0 4px; }
+
+.board-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 14px;
+}
+
+.board-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-search {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 10px 6px 30px;
+  font-size: 13px;
+  color: var(--text-dark);
+  background: var(--bg-white);
+  outline: none;
+  width: 160px;
+  position: relative;
+  transition: border-color .15s, width .2s;
+}
+.toolbar-search:focus { border-color: var(--blue); width: 220px; }
+
+.toolbar-search-wrap { position: relative; }
+.toolbar-search-wrap::before {
+  content: '⌕';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.avatars {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  margin-left: -6px;
+  cursor: pointer;
+  transition: transform .15s;
+}
+.avatar:first-child { margin-left: 0; }
+.avatar:hover { transform: scale(1.15); z-index: 2; }
+
+.avatar-more {
+  background: var(--border);
+  color: var(--text-mid);
+  font-size: 10px;
+}
+
+.toolbar-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-white);
+  color: var(--text-mid);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.toolbar-filter-btn:hover { background: var(--bg-hover); border-color: #c1c7d0; }
+.toolbar-filter-btn.active { background: var(--blue-bg); color: var(--blue); border-color: var(--blue); }
+
+.toolbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.insights-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 3px;
+  background: none;
+  border: none;
+  color: var(--text-mid);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s;
+}
+.insights-btn:hover { background: var(--bg-hover); }
+
+/* ===================== METRICS ROW ===================== */
+.metrics-section {
+  padding: 16px 24px;
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border);
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: box-shadow .15s, transform .15s;
+  cursor: default;
+}
+.metric-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.metric-label-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.metric-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 3px;
+}
+
+/* ===================== KANBAN BOARD ===================== */
+.board-area {
+  flex: 1;
+  padding: 0 24px 24px;
+  background: var(--bg-page);
+  overflow-x: auto;
+}
+
+.board-columns {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  min-width: 800px;
+  align-items: flex-start;
+}
+
+/* ===================== COLUMN ===================== */
+.column {
+  flex: 1;
+  min-width: 220px;
+  max-width: 280px;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-mid);
+}
+
+.column-header .col-count {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.column-header .col-check {
+  color: var(--green);
+  font-size: 13px;
+}
+
+.column-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ===================== CARD ===================== */
+.card {
+  background: var(--bg-white);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: box-shadow .15s, transform .15s;
+  border: 1px solid transparent;
+  animation: cardIn .25s ease both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.card-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.badge-productive  { background: var(--green-bg);  color: #006644; }
+.badge-distracting { background: var(--red-bg);    color: #bf2600; }
+.badge-neutral     { background: var(--teal-bg);   color: #006587; }
+.badge-unknown     { background: #f4f5f7;           color: var(--text-light); }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.card-id {
+  font-size: 11px;
+  color: var(--text-light);
+  font-family: monospace;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-time {
+  font-size: 11px;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.card-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ===================== ANALYTICS PANEL (SLIDE-DOWN) ===================== */
+.analytics-overlay {
+  display: none;
+  position: fixed;
+  top: var(--topbar-h);
+  right: 0;
+  width: 400px;
+  height: calc(100vh - var(--topbar-h));
+  background: var(--bg-white);
+  border-left: 1px solid var(--border);
+  z-index: 150;
+  box-shadow: -4px 0 16px rgba(9,30,66,.12);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform .25s ease;
+  flex-direction: column;
+}
+
+.analytics-overlay.open {
+  display: flex;
+  transform: translateX(0);
+}
+
+.analytics-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.analytics-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.analytics-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-light);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.analytics-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+.chart-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 180px;
+}
+
+/* ===================== LIVE FEED PANEL ===================== */
+.live-panel {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 320px;
+  background: #0d1117;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  overflow: hidden;
+  z-index: 140;
+  border: 1px solid #21262d;
+  transition: all .2s;
+}
+
+.live-panel.collapsed .live-body { display: none; }
+
+.live-header {
+  padding: 10px 14px;
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #21262d;
+  cursor: pointer;
+  user-select: none;
+}
+
+.live-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c9d1d9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3fb950;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .3; }
+}
+
+.live-toggle {
+  background: none;
+  border: none;
+  color: #6e7681;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+
+.live-body {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.live-body::-webkit-scrollbar { width: 3px; }
+.live-body::-webkit-scrollbar-track { background: transparent; }
+.live-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+.live-item {
+  background: #161b22;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #3fb950;
+  animation: slideIn .2s ease;
+}
+
+.live-item.distracting { border-left-color: #f85149; }
+.live-item.neutral     { border-left-color: #58a6ff; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.live-item-event {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c9d1d9;
+  margin-bottom: 2px;
+}
+
+.live-item-url {
+  font-size: 11px;
+  color: #8b949e;
+  word-break: break-all;
+}
+
+.live-item-time {
+  font-size: 10px;
+  color: #484f58;
+  margin-top: 2px;
+}
+
+/* ===================== SKELETON LOADING ===================== */
+.skeleton {
+  background: linear-gradient(90deg, #f0f2f5 25%, #e4e7eb 50%, #f0f2f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  height: 80px;
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+/* ===================== COLUMN STATUS COLORS ===================== */
+.col-productive .column-header  { color: #006644; }
+.col-neutral    .column-header  { color: #006587; }
+.col-distracting .column-header { color: #bf2600; }
+.col-sessions   .column-header  { color: #403294; }
+.col-done       .column-header  { color: var(--green); }
+
+/* ===================== ADD CARD BTN ===================== */
+.add-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  transition: background .12s, color .12s;
+  margin-top: 4px;
+}
+.add-card-btn:hover { background: rgba(9,30,66,.06); color: var(--text-dark); }
+
+/* ===================== EMPTY STATE ===================== */
+.empty-col {
+  padding: 16px 10px;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+/* ===================== COLUMN ADD BTN ===================== */
+.add-col-btn {
+  align-self: flex-start;
+  margin-top: 0;
+  padding: 7px 12px;
+  border-radius: 3px;
+  background: none;
+  border: none;
+  color: var(--text-mid);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background .12s;
+}
+.add-col-btn:hover { background: rgba(9,30,66,.06); }
+
+/* ===================== SCROLLBAR ===================== */
+.board-columns::-webkit-scrollbar { height: 6px; }
+.board-columns::-webkit-scrollbar-track { background: transparent; }
+.board-columns::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ===================== GROUP BY LABEL ===================== */
+.group-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-mid);
+}
+
+/* ===================== REFRESH BADGE ===================== */
+.refresh-btn {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-white);
+  color: var(--text-mid);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s;
+}
+.refresh-btn:hover { background: var(--bg-hover); }
+
+/* ===================== CONNECTION STATUS ===================== */
+.conn-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.conn-status.online  { background: var(--green-bg);  color: #006644; }
+.conn-status.offline { background: var(--red-bg);    color: #bf2600; }
+.conn-status.dot     { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+</style>
+</head>
+
+<body>
+
+<!-- ===================== TOPBAR ===================== -->
+<nav class="topbar">
+  <a class="topbar-logo" href="#">
+    <div class="topbar-logo-icon">NT</div>
+    <span class="topbar-logo-name">NeuroTrace</span>
+  </a>
+
+  <div class="topbar-nav">
+    <button class="topbar-nav-item active" onclick="scrollToBoard()">📌 Board</button>
+    <button class="topbar-nav-item" onclick="toggleAnalytics()">📈 Analytics</button>
+    <button class="topbar-nav-item" onclick="openSession()">💻 Sessions</button>
+    <button class="topbar-nav-item" onclick="scrollToMetrics()">📊 Reports</button>
+  </div>
+
+  <div class="topbar-right">
+    <div class="search-wrap">
+      <input class="topbar-search" type="text" placeholder="Search">
+    </div>
+    <button class="topbar-icon-btn notif-badge" data-count="3" title="Notifications">🔔</button>
+    <button class="topbar-icon-btn" title="Help">❓</button>
+    <button class="topbar-icon-btn" title="Settings">⚙️</button>
+    <button class="topbar-create-btn" onclick="openSession()">+ Start Session</button>
+    <div class="topbar-avatar" title="You">NT</div>
+  </div>
+</nav>
+
+<!-- ===================== SIDEBAR ===================== -->
+<aside class="sidebar">
+  <div class="sidebar-project">
+    <div class="sidebar-project-icon">NT</div>
+    <div class="sidebar-project-info">
+      <div class="sidebar-project-name">NeuroTrace</div>
+      <div class="sidebar-project-type">Activity tracker</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section-label">Planning</div>
+
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🗺️</span>
+    Roadmap
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">📋</span>
+    Backlog
+  </a>
+  <a class="sidebar-item active" href="#">
+    <span class="sidebar-item-icon">📌</span>
+    Board
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">📊</span>
+    Reports
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🎯</span>
+    Focus Goals
+  </a>
+
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section-label">Analysis</div>
+
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">💻</span>
+    Sessions
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🔒</span>
+    Security
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🚀</span>
+    Releases
+  </a>
+
+  <div class="sidebar-divider"></div>
+
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">📄</span>
+    Project Pages
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">➕</span>
+    Add Shortcut
+  </a>
+
+  <div class="sidebar-bottom">
+    <a class="sidebar-item" href="#">
+      <span class="sidebar-item-icon">⚙️</span>
+      Project Settings
+    </a>
+  </div>
+</aside>
+
+<!-- ===================== MAIN ===================== -->
+<main class="main">
+
+  <!-- Board Header -->
+  <div class="board-header">
+    <div class="board-breadcrumb">
+      <a href="#">Projects</a>
+      <span>/</span>
+      <a href="#">NeuroTrace</a>
+    </div>
+    <div class="board-title">Activity Board</div>
+
+    <div class="board-toolbar">
+      <div class="toolbar-search-wrap">
+        <input class="toolbar-search" type="text" placeholder="Search board" oninput="filterCards(this.value)">
+      </div>
+
+      <div class="avatars" id="avatarRow">
+        <div class="avatar" style="background:#0052cc" title="Session 1">S1</div>
+        <div class="avatar" style="background:#36b37e" title="Session 2">S2</div>
+        <div class="avatar" style="background:#ff8b00" title="Session 3">S3</div>
+        <div class="avatar avatar-more">+2</div>
+      </div>
+
+      <button class="toolbar-filter-btn" id="filterProductive" onclick="toggleFilter('productive')">
+        🟢 Productive
+      </button>
+      <button class="toolbar-filter-btn" id="filterDistracting" onclick="toggleFilter('distracting')">
+        🔴 Distracting
+      </button>
+      <button class="toolbar-filter-btn" id="filterNeutral" onclick="toggleFilter('neutral')">
+        🔵 Neutral
+      </button>
+
+      <div class="toolbar-right">
+        <span class="group-label">Group by</span>
+        <button class="toolbar-filter-btn">
+          Category <span class="caret">▾</span>
+        </button>
+
+        <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+
+        <button class="insights-btn" onclick="toggleAnalytics()">
+          📈 Insights
+        </button>
+
+        <span class="conn-status offline" id="connStatus">
+          <span class="dot"></span>
+          Offline
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics Row -->
+  <div class="metrics-section">
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-label">
+          <span class="metric-label-dot" style="background:#0052cc"></span>
+          Total Sites
+        </div>
+        <div class="metric-val" id="totalSites">—</div>
+        <div class="metric-sub">Unique URLs tracked</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-label">
+          <span class="metric-label-dot" style="background:#36b37e"></span>
+          Total Time
+        </div>
+        <div class="metric-val" id="totalTime">—</div>
+        <div class="metric-sub">Seconds across all sites</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-label">
+          <span class="metric-label-dot" style="background:#ff8b00"></span>
+          Top Site
+        </div>
+        <div class="metric-val" id="topSite" style="font-size:14px;word-break:break-all">—</div>
+        <div class="metric-sub">Most visited</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-label">
+          <span class="metric-label-dot" style="background:#6554c0"></span>
+          Focus Index
+        </div>
+        <div class="metric-val" id="focusIndex">—</div>
+        <div class="metric-sub">Productive / total time</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-label">
+          <span class="metric-label-dot" style="background:#de350b"></span>
+          Distraction %
+        </div>
+        <div class="metric-val" id="distractPct">—</div>
+        <div class="metric-sub">Distracting / total time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Board Area -->
+  <div class="board-area">
+    <div class="board-columns" id="boardColumns">
+
+      <!-- PRODUCTIVE column -->
+      <div class="column col-productive">
+        <div class="column-header">
+          Productive <span class="col-count" id="countProductive">0</span>
+        </div>
+        <div class="column-cards" id="colProductive">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+        <button class="add-card-btn">＋ Add item</button>
+      </div>
+
+      <!-- NEUTRAL column -->
+      <div class="column col-neutral">
+        <div class="column-header">
+          Neutral <span class="col-count" id="countNeutral">0</span>
+        </div>
+        <div class="column-cards" id="colNeutral">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+        <button class="add-card-btn">＋ Add item</button>
+      </div>
+
+      <!-- DISTRACTING column -->
+      <div class="column col-distracting">
+        <div class="column-header">
+          Distracting <span class="col-count" id="countDistracting">0</span>
+        </div>
+        <div class="column-cards" id="colDistracting">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+        <button class="add-card-btn">＋ Add item</button>
+      </div>
+
+      <!-- DONE column -->
+      <div class="column col-done">
+        <div class="column-header">
+          <span class="col-check">✓</span>
+          Done <span class="col-count" id="countDone">0</span>
+        </div>
+        <div class="column-cards" id="colDone">
+          <div class="empty-col">No completed sessions yet</div>
+        </div>
+        <button class="add-card-btn">＋ Add item</button>
+      </div>
+
+      <button class="add-col-btn" title="Add column">＋</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ===================== ANALYTICS SIDE PANEL ===================== -->
+<div class="analytics-overlay" id="analyticsPanel">
+  <div class="analytics-header">
+    <div class="analytics-title">📈 Insights</div>
+    <button class="analytics-close" onclick="toggleAnalytics()">×</button>
+  </div>
+  <div class="analytics-body">
+    <div>
+      <div class="chart-section-title">Time per Site (Top 8)</div>
+      <div class="chart-wrap">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+    <div>
+      <div class="chart-section-title">Category Breakdown</div>
+      <div class="chart-wrap">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LIVE FEED ===================== -->
+<div class="live-panel" id="livePanel">
+  <div class="live-header" onclick="toggleLiveFeed()">
+    <div class="live-title">
+      <div class="live-dot" id="liveDot"></div>
+      Live Activity
+    </div>
+    <button class="live-toggle" id="livePanelToggle">⌄</button>
+  </div>
+  <div class="live-body" id="liveFeed">
+    <div class="live-item neutral">
+      <div class="live-item-event">Waiting for events...</div>
+      <div class="live-item-url">Connect the Chrome extension</div>
+    </div>
+  </div>
+</div>
+<script>
+// =============================================
+// GLOBAL STATE
+// =============================================
+let barChart = null;
+let pieChart = null;
+let allData = [];
+let activeFilters = new Set();
+let wsConnected = false;
+
+// =============================================
+// CATEGORY CLASSIFIER
+// =============================================
+const PRODUCTIVE_SITES = [
+  "github.com","stackoverflow.com","docs.python.org",
+  "geeksforgeeks.org","w3schools.com"
+];
+
+const DISTRACTING_SITES = [
+  "instagram.com","facebook.com","twitter.com",
+  "x.com","netflix.com","youtube.com"
+];
+
+function classifyUrl(url) {
+  if (!url) return "neutral";
+  const u = url.toLowerCase();
+
+  if (PRODUCTIVE_SITES.some(s => u.includes(s))) return "productive";
+  if (DISTRACTING_SITES.some(s => u.includes(s))) return "distracting";
+
+  return "neutral";
+}
+
+// =============================================
+// HELPERS
+// =============================================
+function shortUrl(url) {
+  try {
+    const u = new URL(url.startsWith("http") ? url : "https://" + url);
+    return u.hostname.replace("www.", "");
+  } catch {
+    return url || "unknown";
+  }
+}
+
+function formatTime(sec) {
+  if (!sec) return "0s";
+  if (sec < 60) return Math.round(sec) + "s";
+  if (sec < 3600) return Math.round(sec/60) + "m";
+  return (sec/3600).toFixed(1) + "h";
+}
+
+// =============================================
+// METRICS
+// =============================================
+function updateMetrics(data) {
+  const total = data.reduce((a,b)=>a+(b.total_time||0),0);
+  const productive = data.filter(d=>d.category==="productive")
+                         .reduce((a,b)=>a+(b.total_time||0),0);
+  const distracting = data.filter(d=>d.category==="distracting")
+                          .reduce((a,b)=>a+(b.total_time||0),0);
+
+  document.getElementById("totalSites").textContent = data.length;
+  document.getElementById("totalTime").textContent = formatTime(total);
+
+  document.getElementById("topSite").textContent =
+    data.length ? shortUrl(data[0].url) : "—";
+
+  document.getElementById("focusIndex").textContent =
+    total ? Math.round((productive/total)*100)+"%" : "—";
+
+  document.getElementById("distractPct").textContent =
+    total ? Math.round((distracting/total)*100)+"%" : "—";
+}
+
+// =============================================
+// CARD
+// =============================================
+function buildCard(item, index) {
+  const div = document.createElement("div");
+  div.className = "card";
+
+  div.innerHTML = `
+    <div class="card-title">${shortUrl(item.url)}</div>
+    <span class="card-badge badge-${item.category}">${item.category}</span>
+    <div class="card-footer">
+      <span class="card-id">NT-${index+1}</span>
+      <span class="card-time">⏱ ${formatTime(item.total_time)}</span>
+    </div>
+  `;
+  return div;
+}
+
+// =============================================
+// BOARD RENDER
+// =============================================
+function renderBoard(data) {
+  const cols = {
+    productive: document.getElementById("colProductive"),
+    neutral: document.getElementById("colNeutral"),
+    distracting: document.getElementById("colDistracting")
+  };
+
+  Object.values(cols).forEach(c => c.innerHTML = "");
+
+  let counts = { productive:0, neutral:0, distracting:0 };
+
+  data.forEach((item,i)=>{
+    cols[item.category].appendChild(buildCard(item,i));
+    counts[item.category]++;
+  });
+
+  document.getElementById("countProductive").textContent = counts.productive;
+  document.getElementById("countNeutral").textContent = counts.neutral;
+  document.getElementById("countDistracting").textContent = counts.distracting;
+}
+
+// =============================================
+// CHARTS
+// =============================================
+function renderCharts(data) {
+  const labels = data.slice(0,8).map(d=>shortUrl(d.url));
+  const values = data.slice(0,8).map(d=>d.total_time);
+
+  if(barChart) barChart.destroy();
+  if(pieChart) pieChart.destroy();
+
+  barChart = new Chart(document.getElementById("barChart"), {
+    type:"bar",
+    data:{labels,datasets:[{data:values}]},
+    options:{ maintainAspectRatio:false }
+  });
+
+  const cat = {productive:0,neutral:0,distracting:0};
+  data.forEach(d=>cat[d.category]+=d.total_time||0);
+
+  pieChart = new Chart(document.getElementById("pieChart"), {
+    type:"doughnut",
+    data:{
+      labels:["Productive","Neutral","Distracting"],
+      datasets:[{data:[cat.productive,cat.neutral,cat.distracting]}]
+    },
+    options:{ maintainAspectRatio:false }
+  });
+}
+
+// =============================================
+// LOAD DATA (MAIN FIXED FUNCTION)
+// =============================================
+async function loadData() {
+  try {
+    const res = await fetch("/api/dashboard-data/");
+    const json = await res.json();
+
+    let data = json.results || [];
+
+    data = data.map(d => ({
+      ...d,
+      category: d.category || classifyUrl(d.url)
+    }));
+
+    allData = data;
+
+    updateMetrics(data);
+    renderBoard(data);
+    renderCharts(data);
+
+  } catch(err) {
+    console.error("Load error:", err);
+  }
+}
+
+// =============================================
+// FILTERS
+// =============================================
+function toggleFilter(cat) {
+  if(activeFilters.has(cat)) activeFilters.delete(cat);
+  else activeFilters.add(cat);
+
+  const filtered = activeFilters.size
+    ? allData.filter(d=>activeFilters.has(d.category))
+    : allData;
+
+  renderBoard(filtered);
+}
+
+// =============================================
+// ANALYTICS
+// =============================================
+function toggleAnalytics() {
+  document.getElementById("analyticsPanel").classList.toggle("open");
+}
+
+// =============================================
+// 🔥 FIX: AUTO LIVE UPDATE SYSTEM & WEBSOCKETS
+// =============================================
+let ws;
+let reconnectTimer;
+
+function connectWebSocket() {
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsUrl = `${protocol}//${window.location.host}/ws/dashboard/`;
+  
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    console.log("WebSocket connected!");
+    wsConnected = true;
+    
+    const connStatus = document.getElementById("connStatus");
+    if (connStatus) {
+      connStatus.className = "conn-status online";
+      connStatus.innerHTML = '<span class="dot"></span> Online';
+    }
+    
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    
+    const feed = document.getElementById("liveFeed");
+    if (feed && feed.innerHTML.includes("Waiting for events...")) {
+      feed.innerHTML = "";
+    }
+  };
+
+  ws.onclose = (e) => {
+    console.log("WebSocket disconnected. Trying to reconnect in 5s...", e);
+    wsConnected = false;
+    
+    const connStatus = document.getElementById("connStatus");
+    if (connStatus) {
+      connStatus.className = "conn-status offline";
+      connStatus.innerHTML = '<span class="dot"></span> Offline';
+    }
+    
+    if (!reconnectTimer) {
+      reconnectTimer = setTimeout(connectWebSocket, 5000);
+    }
+  };
+
+  ws.onerror = (err) => {
+    console.error("WebSocket error:", err);
+    ws.close();
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const payload = JSON.parse(e.data);
+      if (payload.type === "update" && payload.data) {
+        addLiveActivity(payload.data);
+        loadData();
+      }
+    } catch (err) {
+      console.error("Error parsing WS message:", err);
+    }
+  };
+}
+
+function addLiveActivity(data) {
+  const feed = document.getElementById("liveFeed");
+  if (!feed) return;
+  
+  const div = document.createElement("div");
+  div.className = `live-item ${data.category || "neutral"}`;
+  
+  const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+  
+  div.innerHTML = `
+    <div class="live-item-event">${data.event_type || "activity"}</div>
+    <div class="live-item-url">${shortUrl(data.url)}</div>
+    <div class="live-item-time">${timeStr}</div>
+  `;
+  
+  feed.insertBefore(div, feed.firstChild);
+  
+  while (feed.children.length > 20) {
+    feed.removeChild(feed.lastChild);
+  }
+}
+
+function startAutoRefresh() {
+  loadData(); // initial load
+
+  // Less aggressive fallback polling since we have websockets now
+  setInterval(() => {
+    loadData();
+  }, 10000);
+}
+
+// =============================================
+// INIT
+// =============================================
+window.onload = () => {
+  startAutoRefresh();
+  connectWebSocket();
+};
+</script>
+</body>
+</html>
