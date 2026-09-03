@@ -2,9 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # SESSION MODEL
-# ─────────────────────────────────────────────────────────────────────────────
 class ActivitySession(models.Model):
 
     STATUS_ACTIVE    = "active"
@@ -36,10 +34,8 @@ class ActivitySession(models.Model):
         user_label = self.user.username if self.user else "anonymous"
         return f"Session #{self.id} | {user_label} | {self.status}"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 # ACTIVITY LOG MODEL
-# ─────────────────────────────────────────────────────────────────────────────
+
 class ActivityLog(models.Model):
 
     session  = models.ForeignKey(
@@ -61,13 +57,12 @@ class ActivityLog(models.Model):
         return f"[{self.event_type}] {self.url or 'no-url'} @ {self.timestamp:%Y-%m-%d %H:%M}"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # TAB STATE MODEL  (NEW — FIX-5)
-#
+
 # Replaces USER_ACTIVITY_TRACKER = {} in-memory dict.
-# Persists across server restarts; safe under multiple Gunicorn workers.
-# One row per (session, tab_id) pair — updated on every page_enter/exit.
-# ─────────────────────────────────────────────────────────────────────────────
+# Persists across server restarts , safe under multiple Gunicorn workers.
+# One row per (session, tab_id) pair— updated on every page_enter/exit.
+
 class TabState(models.Model):
 
     session    = models.ForeignKey(
