@@ -1,6 +1,5 @@
 """
-views.py — NeuroTrace Core
-==========================
+
 Production-grade activity tracking backend.
 
 FIXES APPLIED (vs original prototype):
@@ -46,9 +45,8 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 logger = logging.getLogger(__name__)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTS
-# ─────────────────────────────────────────────────────────────────────────────
+
 EVENT_COOLDOWN   = 2        # seconds — spam filter window per (session, tab, url)
 IDLE_THRESHOLD   = 60       # seconds — gap larger than this is not counted as active
 MAX_TRACKER_SIZE = 10_000   # entries — evict entire cache when exceeded
@@ -68,9 +66,7 @@ INVALID_URL_PREFIXES = (
 INVALID_URL_HOSTNAMES = {"", "newtab", "localhost", "127.0.0.1", "0.0.0.0"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # SITE CLASSIFICATION LISTS
-# ─────────────────────────────────────────────────────────────────────────────
 PRODUCTIVE_SITES = [
     "w3schools.com", "geeksforgeeks.org", "developer.mozilla.org",
     "freecodecamp.org", "tutorialspoint.com", "javatpoint.com",
@@ -87,18 +83,240 @@ PRODUCTIVE_SITES = [
     "linkedin.com", "internshala.com", "naukri.com",
 ]
 
-DISTRACTING_SITES = [
-    "tiktok.com", "instagram.com",
-    "facebook.com", "snapchat.com", "reddit.com",
-    "discord.com", "omegle.com", "chatroulette.com",
-    "netflix.com", "hotstar.com", "primevideo.com",
-    "steamcommunity.com", "epicgames.com", "roblox.com",
-    "tinder.com", "bumble.com",
-    "amazon.in", "flipkart.com", "myntra.com",
-    "quora.com", "buzzfeed.com", "spotify.com", "jiosaavn.com",
-    "twitter.com", "x.com",
-]
 
+DISTRACTING_SITES = [
+    # SOCIAL MEDIA
+    "tiktok.com",
+    "instagram.com",
+    "facebook.com",
+    "snapchat.com",
+    "reddit.com",
+    "twitter.com",
+    "x.com",
+    "threads.net",
+    "pinterest.com",
+    "tumblr.com",
+    "bluesky.app",
+    "mastodon.social",
+    "kooapp.com",
+
+    # CHAT / RANDOM CHAT
+
+    "discord.com",
+    "discordapp.com",
+    "omegle.com",
+    "chatroulette.com",
+    "chathub.com",
+    "monkey.app",
+    "tinychat.com",
+    "azar.live",
+    "meetme.com",
+
+    # SEARCH / PORTALS
+    "yandex.com",
+    "yandex.ru",
+    "bing.com",
+    "ask.com",
+    "aol.com",
+    "excite.com",
+    "lycos.com",
+    "dogpile.com",
+    "ecosia.org",
+
+    # VIDEO / STREAMING
+    "youtube.com",
+    "netflix.com",
+    "hotstar.com",
+    "primevideo.com",
+    "hulu.com",
+    "disneyplus.com",
+    "max.com",
+    "hbomax.com",
+    "peacocktv.com",
+    "paramountplus.com",
+    "twitch.tv",
+    "dailymotion.com",
+    "vimeo.com",
+    "rumble.com",
+    "crunchyroll.com",
+    "bilibili.com",
+    "kick.com",
+
+    
+    # MUSIC
+
+    "spotify.com",
+    "jiosaavn.com",
+    "gaana.com",
+    "soundcloud.com",
+    "wynk.in",
+    "hungama.com",
+    "music.youtube.com",
+    "deezer.com",
+    "last.fm",
+
+  
+    # WEB GAMES / CASUAL GAMES
+    
+    "poki.com",
+    "crazygames.com",
+    "miniclip.com",
+    "y8.com",
+    "kizi.com",
+    "friv.com",
+    "kongregate.com",
+    "armor games.com",
+    "addictinggames.com",
+    "newgrounds.com",
+    "silvergames.com",
+    "crazygames.com",
+    "coolmathgames.com",
+    "agame.com",
+    "gameflare.com",
+    "gamemonetize.com",
+    "plays.org",
+    "itch.io",
+    "kongregate.com",
+
+   
+    # GAMING
+    "steamcommunity.com",
+    "steampowered.com",
+    "store.steampowered.com",
+    "epicgames.com",
+    "roblox.com",
+    "minecraft.net",
+    "riotgames.com",
+    "leagueoflegends.com",
+    "ea.com",
+    "playstation.com",
+    "xbox.com",
+    "ubisoft.com",
+    "battle.net",
+    "blizzard.com",
+    "ign.com",
+    "gamespot.com",
+    "gog.com",
+
+    
+    # MEMES / GIFS
+    
+    "9gag.com",
+    "giphy.com",
+    "tenor.com",
+    "imgur.com",
+    "ifunny.co",
+    "memedroid.com",
+    "knowyourmeme.com",
+    "boredpanda.com",
+    "thechive.com",
+    "weheartit.com",
+
+    # ENTERTAINMENT
+
+    "buzzfeed.com",
+    "vice.com",
+    "ladbible.com",
+    "unilad.com",
+    "tmz.com",
+    "dailymail.co.uk",
+    "imdb.com",
+    "rottentomatoes.com",
+    "fandom.com",
+
+  
+    # ANIME / MANGA
+ 
+    "crunchyroll.com",
+    "webtoons.com",
+    "mangadex.org",
+    "mangakakalot.com",
+    "manganato.com",
+    "mangafire.to",
+    "aniwatch.to",
+    "9anime.to",
+    "animixplay.to",
+    "wattpad.com",
+    "fanfiction.net",
+    "archiveofourown.org",
+
+    
+    # ONLINE SHOPPING
+
+    "amazon.in",
+    "amazon.com",
+    "flipkart.com",
+    "myntra.com",
+    "meesho.com",
+    "ajio.com",
+    "snapdeal.com",
+    "ebay.com",
+    "etsy.com",
+    "walmart.com",
+    "target.com",
+    "nykaa.com",
+    "tatacliq.com",
+
+    
+    # SPORTS
+   
+    "espn.com",
+    "cricbuzz.com",
+    "cricinfo.com",
+    "sportskeeda.com",
+    "bleacherreport.com",
+    "goal.com",
+    "nba.com",
+    "fifa.com",
+    "wwe.com",
+
+   
+    # FORUMS / DISCUSSION
+   
+    "quora.com",
+    "4chan.org",
+    "8kun.top",
+    "producthunt.com",
+    "stackexchange.com",
+
+    
+    # DATING
+    
+    "tinder.com",
+    "bumble.com",
+    "hinge.co",
+    "okcupid.com",
+    "match.com",
+    "pof.com",
+
+    
+    # FOOD / DELIVERY
+    
+    "zomato.com",
+    "swiggy.com",
+    "ubereats.com",
+    "doordash.com",
+
+    
+    # TRAVEL
+    
+    "tripadvisor.com",
+    "booking.com",
+    "airbnb.com",
+    "makemytrip.com",
+    "goibibo.com",
+
+  
+    # OTHER ENTERTAINMENT
+   
+    "buzzfeed.com",
+    "9gag.com",
+    "imgur.com",
+    "giphy.com",
+    "vice.com",
+    "medium.com",
+    "substack.com",
+]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # IN-MEMORY L1 CACHE  (tab-level, evicted on overflow or restart)
