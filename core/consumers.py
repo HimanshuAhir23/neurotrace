@@ -35,16 +35,16 @@ class DashboardConsumer(AsyncWebsocketConsumer):
         """
         pass
 
-    # -----------------------------------------------
+    
     # BROADCAST HANDLER
     # type must match the "type" key in group_send()
     # i.e. "update" → update()
-    # -----------------------------------------------
+  
     async def update(self, event):
         data = event.get("data", {})
 
         # FIX: wrap send in try/except so one bad client
-        #      can't kill the entire consumer
+        #     can't kill the entire consumer
         try:
             await self.send(text_data=json.dumps({
                 "type": "update",
